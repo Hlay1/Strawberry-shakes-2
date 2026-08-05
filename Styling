@@ -1,0 +1,65 @@
+/* Basic page layout */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+/* Header styling */
+header {
+    background-color: #e8eef3;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #cdd7df;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+/* Restaurant sections */
+.restaurant {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    margin: 15px auto;
+    padding: 15px;
+    width: 90%;
+    max-width: 700px;
+    border-left: 5px solid #b3c7d6;
+    border-radius: 4px;
+}
+
+/* Logo styling */
+.logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-right: 20px;
+}
+
+/* Text block */
+.info h2 {
+    margin: 0 0 10px 0;
+    color: #2a4a63;
+}
+
+.info p {
+    margin: 4px 0;
+}
+
+/* Subtle color coding for shake availability */
+.info p:last-child {
+    font-weight: bold;
+}
+
+.info p:last-child:contains("Yes") {
+    color: #2e7d32; /* green */
+}
+
+.info p:last-child:contains("No") {
+    color: #c62828; /* red */
+}

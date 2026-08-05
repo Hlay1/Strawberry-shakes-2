@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Directory</title>
+    <link rel="stylesheet" href="../CSS/Styling">
+</head>
+<body>
+
+    <header>
+        <h1>Restaurant Directory</h1>
+        <p>A simple list of local restaurants and what they offer.</p>
+    </header>
+
+    <main id="restaurant-list">
+        <p class="loading">Loading restaurant details from Companybio…</p>
+    </main>
+
+    <script>
+        const sourceUrl = "../BIoclip/Companybio";
+        const restaurantList = document.getElementById("restaurant-list");
+
+        function toHtml(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                .replace(/\n/g, " ");
+        }
+
+        function createSection(name, paragraphs) {
+            const section = document.createElement("section");
+            section.className = "restaurant";
+
+            const info = document.createElement("div");
+            info.className = "info";
+
+            const title = document.createElement("h2");
+            title.textContent = name;
+            info.appendChild(title);
+
+            paragraphs.forEach(paragraph => {
+                const p = document.createElement("p");
+                p.innerHTML = toHtml(paragraph);
+                info.appendChild(p);
+            });
+
+            section.appendChild(info);
+            return section;
+        }
+
+        function parseCompanyBio(rawText) {
+            const lines = rawText.replace(/\r\n/g, "\n").split("\n");
+            const entries = [];
+            let currentEntry = null;
+            let currentParagraph = [];
+
+            function pushParagraph() {
+                if (!currentEntry || currentParagraph.length === 0) return;
+                currentEntry.paragraphs.push(currentParagraph.join(" ").trim());
+                currentParagraph = [];
+            }
+
+            function pushEntry() {
+                if (!currentEntry) return;
+                pushParagraph();
+                if (currentEntry.paragraphs.length) entries.push(currentEntry);
+                currentEntry = null;
+            }
+
+            lines.forEach(line => {
+                const headerMatch = line.match(/^###\s*\*\*(.+?)\*\*/);
+                if (headerMatch) {
+                    pushEntry();
+                    currentEntry = { name: headerMatch[1].trim(), paragraphs: [] };
+                    return;
+                }
+
+                if (line.trim() === "") {
+                    pushParagraph();
+                    return;
+                }
+
+                if (currentEntry) {
+                    currentParagraph.push(line.trim());
+                }
+            });
+
+            pushEntry();
+            return entries;
+        }
+
+        function renderError(message) {
+            restaurantList.innerHTML = `<p class="error">Unable to load restaurant data: ${message}</p>`;
+        }
+
+        fetch(sourceUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                const restaurants = parseCompanyBio(text);
+                if (restaurants.length === 0) {
+                    renderError("No entries were found in Companybio.");
+                    return;
+                }
+                restaurantList.innerHTML = "";
+                restaurants.forEach(entry => {
+                    restaurantList.appendChild(createSection(entry.name, entry.paragraphs));
+                });
+            })
+            .catch(error => {
+                renderError(error.message);
+            });
+    </script>
+
+</body>
+</html>
