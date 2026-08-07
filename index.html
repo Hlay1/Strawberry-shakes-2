@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strawberry Shake Index</title>
+    <link rel="stylesheet" href="CSS/Styling.css">
+</head>
+<body>
+
+    <header>
+        <h1>Who has the best strawberry shake?</h1>
+        <p>Has your coworker ever said, "I'm going to McDonald's, do you want anything?" 
+        Have you pondered for a moment, then realized the best thing on any menue should be the Strawberry milkshake? 
+        How do you know who has the best shake though?
+        This simple list of restraunts can help us answer the question: Who has the best strawberry shake?</p>
+
+        <div class="hero-gallery">
+            <img src="Images/Strawberry Shake Hero.webp" alt="Strawberry Shake Hero 1">
+            <img src="Images/Strawberry Shake Hero 2.webp" alt="Strawberry Shake Hero 2">
+            <img src="Images/Strawberry Shake Hero 3.webp" alt="Strawberry Shake Hero 3">
+            <img src="Images/Strawberry Shake Hero 4.webp" alt="Strawberry Shake Hero 4">
+            <img src="Images/Strawberry Shake Hero 5.webp" alt="Strawberry Shake Hero 5">
+            <img src="Images/Strawberry Shake Hero 6.webp" alt="Strawberry Shake Hero 6">
+            <img src="Images/Strawberry Shake Hero 7.webp" alt="Strawberry Shake Hero 7">
+            <img src="Images/Strawberry Shake Hero 8.webp" alt="Strawberry Shake Hero 8">
+        </div>
+    </header>
+
+    <a href="./Mapline_StrawberryShakes_chart.html" class="fixed-link">Graphical Comparison</a>
+
+    <main>
+        <ol id="company-list">
+            <li class="loading">Loading company bios from Companybio…</li>
+        </ol>
+    </main>
+
+    <script>
+        const sourceUrl = "../BIoclip/Companybio";
+        const companyList = document.getElementById("company-list");
+
+        function toHtml(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                .replace(/\n/g, " ");
+        }
+
+        // Parse numbered entries like "1. **Name**" followed by paragraph lines
+        function parseCompanyBio(rawText) {
+            const lines = rawText.replace(/\r\n/g, "\n").split("\n");
+            const entries = [];
+            let currentEntry = null;
+            let currentParagraph = [];
+
+            function pushParagraph() {
+                if (!currentEntry || currentParagraph.length === 0) return;
+                currentEntry.paragraphs.push(currentParagraph.join(" ").trim());
+                currentParagraph = [];
+            }
+
+            function pushEntry() {
+                if (!currentEntry) return;
+                pushParagraph();
+                if (currentEntry.paragraphs.length) entries.push(currentEntry);
+                currentEntry = null;
+            }
+
+            lines.forEach(line => {
+                const headerMatch = line.match(/^\s*\d+\.\s*\*\*(.+?)\*\*/);
+                if (headerMatch) {
+                    pushEntry();
+                    currentEntry = { name: headerMatch[1].trim(), paragraphs: [] };
+                    return;
+                }
+
+                if (line.trim() === "") {
+                    pushParagraph();
+                    return;
+                }
+
+                if (currentEntry) {
+                    currentParagraph.push(line.trim());
+                }
+            });
+
+            pushEntry();
+            return entries;
+        }
+
+        function renderError(message) {
+            companyList.innerHTML = `<li class="error">Unable to load company data: ${message}</li>`;
+        }
+
+        fetch(sourceUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                const companies = parseCompanyBio(text);
+                if (companies.length === 0) {
+                    renderError("No entries were found in Companybio.");
+                    return;
+                }
+                companyList.innerHTML = "";
+                companies.forEach(entry => {
+                    const li = document.createElement("li");
+                    const title = document.createElement("h3");
+                    title.innerHTML = `<strong>${entry.name}</strong>`;
+                    li.appendChild(title);
+
+                    // Show each paragraph as a short description (<p>)
+                    entry.paragraphs.forEach(par => {
+                        const p = document.createElement("p");
+                        p.innerHTML = toHtml(par);
+                        li.appendChild(p);
+                    });
+
+                    companyList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                renderError(error.message);
+            });
+    </script>
+
+</body>
+</html>
